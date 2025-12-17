@@ -13,8 +13,7 @@ public class ApplicationCRUD {
 
    // 1. Submit a new application (User)
 public static boolean submitApp(int userId, int petId) {
-        
-        // 1. Check duplicate prevention logic (Optional, keep if you have it)
+
         // if (hasApplied(userId, petId)) return false; 
 
         Connection conn = null;
@@ -131,41 +130,80 @@ public static boolean submitApp(int userId, int petId) {
    }
 
 
-   // 4. Update Status (Approve/Reject) - With Safe Connection Handling
+// 4. Update Application Status (Approve/Reject)
+   // [UPDATED] Now handles "Releasing" the pet back to Available if Rejected
    public static boolean updateStatus(int appId, String newStatus) {
-       boolean updateSuccess = false;
-       String sql = "UPDATE adoption_applications SET status = ? WHERE app_id = ?";
+       Connection conn = null;
+       PreparedStatement pstmtApp = null;
+       PreparedStatement pstmtPet = null;
+       boolean success = false;
 
+       // 1. Get the Pet ID first (We need to know WHICH pet to release)
+       int petId = getPetIdByAppId(appId);
+       if (petId == -1) return false; // Safety check
 
-       // 1. Run the Application Update
-       try (Connection conn = DBConnection.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
-           pstmt.setString(1, newStatus);
-           pstmt.setInt(2, appId);
-           updateSuccess = pstmt.executeUpdate() > 0;
+       String sqlApp = "UPDATE adoption_applications SET status = ? WHERE app_id = ?";
+       
+       try {
+           conn = DBConnection.getConnection();
+           conn.setAutoCommit(false); // Start Transaction
+
+           // Step 1: Update Application Status (e.g., to "Rejected")
+           pstmtApp = conn.prepareStatement(sqlApp);
+           pstmtApp.setString(1, newStatus);
+           pstmtApp.setInt(2, appId);
+           int row1 = pstmtApp.executeUpdate();
+
+           // Step 2: Handle Pet Status Change
+           int row2 = 0;
+           if ("Rejected".equalsIgnoreCase(newStatus)) {
+               // IF REJECTED: Pet becomes 'Available' again (Reappear in search)
+               String sqlPet = "UPDATE pets SET status = 'Available' WHERE pet_id = ?";
+               pstmtPet = conn.prepareStatement(sqlPet);
+               pstmtPet.setInt(1, petId);
+               row2 = pstmtPet.executeUpdate();
+           } 
+           else if ("Approved".equalsIgnoreCase(newStatus)) {
+               // IF APPROVED: Pet becomes 'Adopted'
+               String sqlPet = "UPDATE pets SET status = 'Adopted' WHERE pet_id = ?";
+               pstmtPet = conn.prepareStatement(sqlPet);
+               pstmtPet.setInt(1, petId);
+               row2 = pstmtPet.executeUpdate();
+           }
+           else {
+               // If status is just updated to something else, we count it as success
+               row2 = 1; 
+           }
+
+           if (row1 > 0 && row2 > 0) {
+               conn.commit();
+               success = true;
+           } else {
+               conn.rollback();
+           }
+
        } catch (SQLException e) {
            e.printStackTrace();
-           return false;
+           try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+       } finally {
+           try {
+               if (conn != null) conn.setAutoCommit(true);
+               if (conn != null) conn.close();
+               if (pstmtApp != null) pstmtApp.close();
+               if (pstmtPet != null) pstmtPet.close();
+           } catch (SQLException e) { e.printStackTrace(); }
        }
-
-
-       // 2. If successful AND Approved, update Pet status independently
-       if (updateSuccess && "Approved".equalsIgnoreCase(newStatus)) {
-           updatePetStatus(appId);
-       }
-
-
-       return updateSuccess;
+       return success;
    }
 
-
-   private static void updatePetStatus(int appId) {
-       String sql = "UPDATE pets SET status = 'Adopted' WHERE pet_id = " +
-               "(SELECT pet_id FROM adoption_applications WHERE app_id = ?)";
+   // [REQUIRED HELPER] Add this method to the bottom of the class
+   private static int getPetIdByAppId(int appId) {
+       String sql = "SELECT pet_id FROM adoption_applications WHERE app_id = ?";
        try (Connection conn = DBConnection.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
            pstmt.setInt(1, appId);
-           pstmt.executeUpdate();
+           ResultSet rs = pstmt.executeQuery();
+           if (rs.next()) return rs.getInt("pet_id");
        } catch (SQLException e) { e.printStackTrace(); }
-   }
-}
+       return -1;
+   }}
