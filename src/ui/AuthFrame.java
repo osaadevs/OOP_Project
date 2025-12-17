@@ -48,7 +48,7 @@ public class AuthFrame extends JFrame {
         // Load Images (Ensure images are in your 'src' folder)
         JPanel loginImgPanel = new JPanel(new BorderLayout());
         loginImgPanel.setBackground(StyleTheme.MAIN_COLOR);
-        loginImgPanel.add(createImageLabel("/resources/Logo 2.png"));
+        loginImgPanel.add(createImageLabel("/resources/login cat.jpeg"));
         brandPanel.add(loginImgPanel, "IMG_LOGIN");
 
         JPanel regImgPanel = new JPanel(new BorderLayout());
@@ -312,7 +312,7 @@ public class AuthFrame extends JFrame {
             if (imgURL != null) {
                 ImageIcon icon = new ImageIcon(imgURL);
                 Image img = icon.getImage();
-                Image resized = img.getScaledInstance(350, 600, Image.SCALE_SMOOTH);
+                Image resized = img.getScaledInstance(400, 600, Image.SCALE_SMOOTH);
                 return new JLabel(new ImageIcon(resized));
             } else {
                 return new JLabel("<html><div style='text-align:center; color:white;'>Image Missing<br>" + path + "</div></html>", SwingConstants.CENTER);

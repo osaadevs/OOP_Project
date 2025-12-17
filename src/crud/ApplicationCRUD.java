@@ -12,21 +12,53 @@ public class ApplicationCRUD {
 
 
    // 1. Submit a new application (User)
-   public static boolean submitApp(int userId, int petId) {
-       if (hasApplied(userId, petId)) return false; // Prevent duplicates
+public static boolean submitApp(int userId, int petId) {
+        
+        // 1. Check duplicate prevention logic (Optional, keep if you have it)
+        // if (hasApplied(userId, petId)) return false; 
 
+        Connection conn = null;
+        PreparedStatement pstmtApp = null;
+        PreparedStatement pstmtPet = null;
 
-       String sql = "INSERT INTO adoption_applications (user_id, pet_id, status) VALUES (?, ?, 'Pending')";
-       try (Connection conn = DBConnection.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
-           pstmt.setInt(1, userId);
-           pstmt.setInt(2, petId);
-           return pstmt.executeUpdate() > 0;
-       } catch (SQLException e) {
-           e.printStackTrace();
-           return false;
-       }
-   }
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // START TRANSACTION
+
+            // Task A: Create the Application
+            String sqlApp = "INSERT INTO adoption_applications (user_id, pet_id, status) VALUES (?, ?, 'Pending')";
+            pstmtApp = conn.prepareStatement(sqlApp);
+            pstmtApp.setInt(1, userId);
+            pstmtApp.setInt(2, petId);
+            int rows1 = pstmtApp.executeUpdate();
+
+            // Task B: Lock the Pet (Change Status to Pending)
+            String sqlPet = "UPDATE pets SET status = 'Pending' WHERE pet_id = ?";
+            pstmtPet = conn.prepareStatement(sqlPet);
+            pstmtPet.setInt(1, petId);
+            int rows2 = pstmtPet.executeUpdate();
+
+            // If BOTH tasks succeeded, save changes
+            if (rows1 > 0 && rows2 > 0) {
+                conn.commit(); 
+                System.out.println("Success! Application created AND Pet locked.");
+                return true;
+            } else {
+                conn.rollback(); // Undo if one failed
+                return false;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
+        } finally {
+            try {
+                if (conn != null) conn.setAutoCommit(true);
+                if (conn != null) conn.close();
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
 
 
    // Helper: Check for duplicates

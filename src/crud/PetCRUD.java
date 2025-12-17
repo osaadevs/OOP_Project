@@ -31,26 +31,54 @@ public class PetCRUD {
 
 
    // --- READ ---
+   
    public static List<Pet> getAllPets() {
-       List<Pet> pets = new ArrayList<>();
-       String sql = "SELECT * FROM pets";
+       List<Pet> list = new ArrayList<>();
+       String sql = "SELECT * FROM pets"; // Fetches EVERYTHING
+
        try (Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
+           
            while (rs.next()) {
-               pets.add(new Pet(
-                       rs.getInt("pet_id"),
-                       rs.getString("name"),
-                       rs.getString("type"),
-                       rs.getString("breed"),
-                       rs.getInt("age"),
-                       rs.getInt("shelter_id"),
-                       rs.getString("status")
+               list.add(new Pet(
+                   rs.getInt("pet_id"),
+                   rs.getString("name"),
+                   rs.getString("type"),
+                   rs.getString("breed"),
+                   rs.getInt("age"),
+                   rs.getInt("shelter_id"),
+                   rs.getString("status")
                ));
            }
        } catch (SQLException e) { e.printStackTrace(); }
-       return pets;
+       return list;
    }
+   
+   public static List<Pet> getAvailablePets() {
+       List<Pet> list = new ArrayList<>();
+       // This query ensures 'Pending' pets are NEVER fetched
+       String sql = "SELECT * FROM pets WHERE status = 'Available'"; 
+
+       try (Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+           
+           while (rs.next()) {
+               list.add(new Pet(
+                   rs.getInt("pet_id"),
+                   rs.getString("name"),
+                   rs.getString("type"),
+                   rs.getString("breed"),
+                   rs.getInt("age"),
+                   rs.getInt("shelter_id"),
+                   rs.getString("status")
+               ));
+           }
+       } catch (SQLException e) { e.printStackTrace(); }
+       return list;
+   }
+
 
 
    // --- UPDATE ---
