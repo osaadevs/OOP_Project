@@ -11,44 +11,45 @@ import java.util.List;
 public class UserCRUD {
 
     //CREATE
-    public static User createUser(String username, String password, String role, String contact) {
-        String sql = "INSERT INTO users (username, password, role, contact) VALUES (?, ?, ?, ?)";
+    public static User createUser(String username, String fullname, String password, String role, String contact) {
+        String sql = "INSERT INTO users (username, fullname, password, role, contact) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, username);
-            pstmt.setString(2, PasswordUtils.hashPassword(password));
-            pstmt.setString(3, role);
-            pstmt.setString(4, contact);
+            pstmt.setString(2, fullname);
+            pstmt.setString(3, PasswordUtils.hashPassword(password));
+            pstmt.setString(4, role);
+            pstmt.setString(5, contact);
 
-            int rows = pstmt.executeUpdate();
-
-            if (rows > 0) {
+            if (pstmt.executeUpdate() > 0) {
                 ResultSet rs = pstmt.getGeneratedKeys();
                 if (rs.next()) {
-                    return new User(rs.getInt(1), username, role, contact);
+                    return new User(rs.getInt(1), username, fullname, role, contact);
                 }
             }
+
         } catch (SQLIntegrityConstraintViolationException e) {
-            // [FIX] Specifically catch duplicate usernames here!
+            //  catch duplicate usernames here!
             System.out.println("Error: Username '" + username + "' already exists.");
             return null; // Return null so the UI knows it failed
         } catch (SQLException e) {
             e.printStackTrace();
-            return null; // Return null for other errors too
+            return null;
         }
         return null;
     }
 
     // UPDATE
-    public static boolean updateUser(int userId, String username, String contact) {
-        String sql = "UPDATE users SET username = ?, contact = ? WHERE user_id = ?";
+    public static boolean updateUser(int userId, String username, String fullname, String contact) {
+        String sql = "UPDATE users SET username = ?, fullname = ?, contact = ? WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
-            pstmt.setString(2, contact);
-            pstmt.setInt(3, userId);
+            pstmt.setString(2, fullname);
+            pstmt.setString(3, contact);
+            pstmt.setInt(4, userId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -68,26 +69,7 @@ public class UserCRUD {
             return false;
         }
     }
-    public static List<User> getAllUsers() {
-        List<User> list = new ArrayList<>();
-        String sql = "SELECT * FROM users";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
 
-            while (rs.next()) {
-                list.add(new User(
-                        rs.getInt("user_id"),
-                        rs.getString("username"),
-                        rs.getString("role"),
-                        rs.getString("contact")
-                ));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
 
     //LOGIN
@@ -100,7 +82,13 @@ public class UserCRUD {
 
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("role"), rs.getString("contact"));
+                return new User(
+                        rs.getInt("user_id"),
+                        rs.getString("username"),
+                        rs.getString("fullname"),
+                        rs.getString("role"),
+                        rs.getString("contact")
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -123,6 +111,7 @@ public class UserCRUD {
                 list.add(new User(
                         rs.getInt("user_id"),
                         rs.getString("username"),
+                        rs.getString("fullname"),
                         rs.getString("role"),
                         rs.getString("contact")
                 ));

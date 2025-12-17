@@ -184,32 +184,35 @@ public class AuthFrame extends JFrame {
 
         // 1. Username
         gbc.gridy = 1; formPanel.add(createLabel("Username"), gbc);
-
         gbc.gridy = 2;
         JTextField userField = new JTextField();
         StyleTheme.styleField(userField);
         formPanel.add(userField, gbc);
 
-        // 2. Contact Number
-        gbc.gridy = 3; formPanel.add(createLabel("Contact No:"), gbc);
-
+        // 2. User Full Name
+        gbc.gridy = 3; formPanel.add(createLabel("Full Name"), gbc);
         gbc.gridy = 4;
+        JTextField nameField = new JTextField();
+        StyleTheme.styleField(nameField);
+        formPanel.add(nameField, gbc);
+
+        // 2. Contact Number
+        gbc.gridy = 5; formPanel.add(createLabel("Contact No:"), gbc);
+        gbc.gridy = 6;
         JTextField contactField = new JTextField();
         StyleTheme.styleField(contactField);
         formPanel.add(contactField, gbc);
 
         // 3. Password
-        gbc.gridy = 5; formPanel.add(createLabel("Password"), gbc);
-
-        gbc.gridy = 6;
+        gbc.gridy = 7; formPanel.add(createLabel("Password"), gbc);
+        gbc.gridy = 8;
         JPasswordField passField = new JPasswordField();
         StyleTheme.styleField(passField);
         formPanel.add(passField, gbc);
 
         // 4. Role Selection
-        gbc.gridy = 7; formPanel.add(createLabel("I am a:"), gbc);
-
-        gbc.gridy = 8;
+        gbc.gridy = 9; formPanel.add(createLabel("I am a:"), gbc);
+        gbc.gridy = 10;
         JComboBox<String> roleBox = new JComboBox<>(new String[]{"Adopter", "ShelterWorker"});
         roleBox.setBackground(Color.WHITE); // Standard White background
         roleBox.setFont(StyleTheme.FIELD_FONT);
@@ -217,22 +220,34 @@ public class AuthFrame extends JFrame {
         formPanel.add(roleBox, gbc);
 
         // 5. Register Button
-        gbc.gridy = 9; gbc.insets = new Insets(20, 40, 10, 40);
+        gbc.gridy = 11; gbc.insets = new Insets(20, 40, 10, 40);
         JButton regBtn = new JButton("REGISTER & LOGIN");
         StyleTheme.stylePrimaryButton(regBtn);
 
         regBtn.addActionListener(e -> {
             String u = userField.getText().trim();
+            String fn = nameField.getText().trim();
             String pwd = new String(passField.getPassword()).trim();
-            String contact = contactField.getText().trim(); // Get contact
+            String contact = contactField.getText().trim();
             String r = (String) roleBox.getSelectedItem();
 
-            if(u.isEmpty() || pwd.isEmpty() || contact.isEmpty()) {
+            if(u.isEmpty() || fn.isEmpty() || pwd.isEmpty() || contact.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Fields cannot be empty.");
                 return;
             }
 
-            User user = UserCRUD.createUser(u, pwd, r, contact);
+            // Contact Validation
+            if (!contact.matches("\\d{10}")) {
+                JOptionPane.showMessageDialog(this, "Contact number must be exactly 10 digits.");
+                return;
+            }
+
+            // Password Validation
+            if (pwd.length() < 8) {
+                JOptionPane.showMessageDialog(this, "Password must be at least 8 characters long.");
+                return;
+            }
+            User user = UserCRUD.createUser(u, fn, pwd, r, contact);
 
             if(user != null) {
                 JOptionPane.showMessageDialog(this, "Welcome to PawPrint!");
