@@ -34,7 +34,7 @@ public class PetCRUD {
    
    public static List<Pet> getAllPets() {
        List<Pet> list = new ArrayList<>();
-       String sql = "SELECT * FROM pets"; // Fetches EVERYTHING
+       String sql = "SELECT * FROM pets";
 
        try (Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement();

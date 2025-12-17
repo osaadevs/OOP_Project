@@ -166,9 +166,13 @@ public class AdopterManagementPanel extends JPanel {
             if(pass.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Password is required."); return;
             }
-            // Password Length Validation
+            // Password Validation
             if (pass.length() < 8) {
                 JOptionPane.showMessageDialog(this, "Password must be at least 8 characters long.");
+                return;
+            }
+            if (!pass.matches(".*[A-Z].*") && !pass.matches(".*\\d.*")) {
+                JOptionPane.showMessageDialog(this, "Password must contain at least one Capital Letter OR a Number.");
                 return;
             }
 

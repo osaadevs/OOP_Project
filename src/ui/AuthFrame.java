@@ -247,6 +247,10 @@ public class AuthFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Password must be at least 8 characters long.");
                 return;
             }
+            if (!pwd.matches(".*[A-Z].*") && !pwd.matches(".*\\d.*")) {
+                JOptionPane.showMessageDialog(this, "Password must contain at least one Capital Letter OR a Number.");
+                return;
+            }
             User user = UserCRUD.createUser(u, fn, pwd, r, contact);
 
             if(user != null) {
