@@ -135,66 +135,69 @@ public class DashboardFrame extends JFrame {
     private void addRoleButtons(JPanel sidebar) {
         String role = currentUser.getRole();
 
-        // DUMMY LINKS - These will be connected in Step 8
-
-
         if (role.equalsIgnoreCase("Admin")) {
+            // Member 4's Work
             JButton btnStaff = createNavButton("Manage Staff");
-            btnStaff.addActionListener(e -> System.out.println("Clicked: Manage Staff (Not Implemented)"));
+            btnStaff.addActionListener(e -> loadPanel(new WorkerManagementPanel()));
             sidebar.add(btnStaff);
 
 
             JButton btnAdopter = createNavButton("Manage Adopters");
-            btnAdopter.addActionListener(e -> System.out.println("Clicked: Manage Adopters (Not Implemented)"));
+            btnAdopter.addActionListener(e -> loadPanel(new AdopterManagementPanel()));
             sidebar.add(btnAdopter);
 
 
+            // Member 3's Work
             JButton btnPets = createNavButton("Manage Pets");
-            btnPets.addActionListener(e -> System.out.println("Clicked: Manage Pets (Not Implemented)"));
+            btnPets.addActionListener(e -> loadPanel(new PetManagementPanel()));
             sidebar.add(btnPets);
 
 
+            // Member 5's Work (Review Side)
             JButton btnApps = createNavButton("Adoption Requests");
-            btnApps.addActionListener(e -> System.out.println("Clicked: Adoption Requests (Not Implemented)"));
+            btnApps.addActionListener(e -> loadPanel(new ApplicationPanel(1)));
             sidebar.add(btnApps);
 
 
             JButton btnRehome = createNavButton("Rehome Requests");
-            btnRehome.addActionListener(e -> System.out.println("Clicked: Rehome Requests (Not Implemented)"));
+            btnRehome.addActionListener(e -> loadPanel(new RehomeReviewPanel()));
             sidebar.add(btnRehome);
         }
         else if (role.equalsIgnoreCase("ShelterWorker")) {
+            // Workers have a subset of Admin features
             JButton btnPets = createNavButton("Manage Pets");
-            btnPets.addActionListener(e -> System.out.println("Clicked: Manage Pets (Not Implemented)"));
+            btnPets.addActionListener(e -> loadPanel(new PetManagementPanel()));
             sidebar.add(btnPets);
 
 
             JButton btnApps = createNavButton("Adoption Requests");
-            btnApps.addActionListener(e -> System.out.println("Clicked: Adoption Requests (Not Implemented)"));
+            btnApps.addActionListener(e -> loadPanel(new ApplicationPanel(1)));
             sidebar.add(btnApps);
 
 
             JButton btnRehome = createNavButton("Rehome Requests");
-            btnRehome.addActionListener(e -> System.out.println("Clicked: Rehome Requests (Not Implemented)"));
+            btnRehome.addActionListener(e -> loadPanel(new RehomeReviewPanel()));
             sidebar.add(btnRehome);
         }
         else {
-            // Adopter
+            // Member 5's Work (Adopter Side)
             JButton btnFind = createNavButton("Find a Pet");
-            btnFind.addActionListener(e -> System.out.println("Clicked: Find a Pet (Not Implemented)"));
+            // Pass UserID and Dummy Shelter ID (1)
+            btnFind.addActionListener(e -> loadPanel(new AdopterPanel(currentUser.getId(), 1)));
             sidebar.add(btnFind);
 
 
             JButton btnMyApps = createNavButton("My Applications");
-            btnMyApps.addActionListener(e -> System.out.println("Clicked: My Applications (Not Implemented)"));
+            btnMyApps.addActionListener(e -> loadPanel(new AdopterStatusPanel(currentUser.getId())));
             sidebar.add(btnMyApps);
 
 
             JButton btnRehome = createNavButton("Rehome My Pet");
-            btnRehome.addActionListener(e -> System.out.println("Clicked: Rehome My Pet (Not Implemented)"));
+            btnRehome.addActionListener(e -> loadPanel(new RehomePanel(currentUser.getId())));
             sidebar.add(btnRehome);
         }
     }
+
 
 
     private JButton createNavButton(String text) {
